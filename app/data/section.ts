@@ -1,9 +1,7 @@
-import Block from "./blocks/block";
-
 export default class Section {
-  blocks: Block[];
+  type: "working" | "review";
 
-  constructor({ blocks }: { blocks: Block[] }) {
-    this.blocks = blocks;
+  constructor(type: "working" | "review") {
+    this.type = type;
   }
 }

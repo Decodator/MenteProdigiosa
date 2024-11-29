@@ -105,6 +105,7 @@ export default function MathKeyboard({
   ];
   return (
     <FlatList
+      style={{  }}
       data={buttons}
       keyExtractor={(item) => item.name}
       numColumns={6}

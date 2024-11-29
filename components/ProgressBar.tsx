@@ -32,10 +32,10 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 const styles = {
   progressBarContainer: {
     display: "flex",
-    width: "100%",
     height: "10px",
     overflow: "hidden",
     gap: 12,
+    padding: 20,
   },
   section: {
     height: "100%",

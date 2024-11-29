@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useData } from "../providers/useData";
 import { useState } from "react";
 import ProgressBar from "@/components/ProgressBar";
-import { Pressable, Text } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import MathKeyboard from "@/components/MathKeyboard";
 
@@ -15,9 +15,11 @@ export default function LessonScreen() {
   const lesson = lessons.find((lesson) => lesson.id == id)!;
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
   const [currentAnswer, setCurrentAnswer] = useState<string>("");
+  const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | undefined>(
+    undefined
+  );
 
   const deleteLastCharacter = () => {
     setCurrentAnswer(currentAnswer.slice(0, currentAnswer.length - 1));
@@ -33,16 +35,21 @@ export default function LessonScreen() {
     } else {
       appendToAnswer(name);
     }
+    setIsAnswerCorrect(undefined);
+  };
+
+  const clearAnswer = () => {
+    setCurrentAnswer("");
+    setIsAnswerCorrect(undefined);
   };
 
   const handleNextSection = () => {
-    if (currentSectionIndex < lessons.length - 1) {
+    if (currentSectionIndex < lessons.length + 1) {
       setCurrentSectionIndex(currentSectionIndex + 1);
-      setCurrentBlockIndex(0);
+      setCurrentAnswer("");
+      setIsAnswerCorrect(undefined);
     } else {
-      if (0 == 0) {
-        router.push("/screens/review_screen");
-      }
+      router.back();
     }
   };
 
@@ -54,65 +61,102 @@ export default function LessonScreen() {
 
   const currentSection = lesson?.sections[currentSectionIndex];
 
-  const handleNextBlock = () => {
-    if (currentBlockIndex < currentSection.blocks.length - 1) {
-      setCurrentBlockIndex(currentBlockIndex + 1);
+  const checkAnswer = () => {
+    if (currentSection.answer == currentAnswer) {
+      setIsAnswerCorrect(true);
     } else {
-      if (0 == 0) {
-        handleNextSection();
-      }
+      setIsAnswerCorrect(false);
     }
   };
-
-  const handlePreviousBlock = () => {
-    if (currentBlockIndex > 0) {
-      setCurrentBlockIndex(currentBlockIndex - 1);
-    }
-  };
-
-  const sectionedBlocks = currentSection.blocks.slice(0, currentBlockIndex + 1);
 
   if (lesson) {
     return (
-      <ThemedView style={{ flex: 1 }}>
-        <ThemedText>{currentAnswer}</ThemedText>
-        <ThemedView style={{ flex: 200, gap: 12, padding: 20 }}>
-          <ProgressBar
-            totalSections={lesson.sections.length}
-            currentSection={currentSectionIndex}
-          />
-          {sectionedBlocks.map((block, index) => (
-            <ThemedView style={{ gap: 12 }} key={index}>
-              {block.text && (
-                <ThemedText style={{ fontSize: 18 }}>{block.text}</ThemedText>
+      <ThemedView style={{ flex: 1}}>
+        <ProgressBar
+          totalSections={lesson.sections.length}
+          currentSection={currentSectionIndex + 1}
+        />
+        {currentSection.type == "working" && (
+          <ThemedView style={{ flex: 1 }}>
+            <ThemedView style={{ flex: 100, gap: 12, padding: 20 }}>
+              <ThemedView
+                style={{
+                  gap: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: 1,
+                }}
+              >
+                {currentSection.blocks.map((block, index) => (
+                  <ThemedView key={index}>
+                    {block.text && (
+                      <ThemedText style={{ fontSize: 24 }}>
+                        {block.text}
+                      </ThemedText>
+                    )}
+                  </ThemedView>
+                ))}
+              </ThemedView>
+            </ThemedView>
+            <ThemedView style={{ flexDirection: "row" }}>
+              <TextInput
+                style={{
+                  flex: 3,
+                  padding: 12,
+                  backgroundColor: "lightgrey",
+                }}
+                value={currentAnswer}
+              />
+              {isAnswerCorrect != undefined && isAnswerCorrect && (
+                <Pressable
+                  style={{ flex: 1, padding: 12, backgroundColor: "green" }}
+                  onPress={() => handleNextSection()}
+                >
+                  <Text style={{ color: "white" }}>Continuar</Text>
+                </Pressable>
               )}
-              {block.question && (
-                <ThemedView>
-                  <ThemedText style={{ fontSize: 18 }}>
-                    {block.question}
-                  </ThemedText>
-                  <TextInput
-                    style={{
-                      padding: 12,
-                      backgroundColor: "lightgrey",
-                      borderRadius: 12,
-                    }}
-                    value={currentAnswer}
-                  />
-                </ThemedView>
+              {isAnswerCorrect != undefined && !isAnswerCorrect && (
+                <Pressable
+                  style={{ flex: 1, padding: 12, backgroundColor: "red" }}
+                  onPress={() => clearAnswer()}
+                >
+                  <Text style={{ color: "white" }}>CE</Text>
+                </Pressable>
+              )}
+              {isAnswerCorrect == undefined && (
+                <Pressable
+                  style={{ flex: 1, padding: 12, backgroundColor: "black" }}
+                  onPress={() => checkAnswer()}
+                >
+                  <Text style={{ color: "white" }}>Revisar</Text>
+                </Pressable>
               )}
             </ThemedView>
-          ))}
-          <Pressable
-            style={{ padding: 12, backgroundColor: "black", borderRadius: 12 }}
-            onPress={() => handleNextBlock()}
+            <MathKeyboard
+              onButtonPressed={(name) => handleKeyboardButtonPress(name)}
+            />
+          </ThemedView>
+        )}
+        {currentSection.type == "review" && (
+          <ThemedView
+            style={{
+              flex: 1,
+              padding: 20,
+              gap: 12,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Text style={{ color: "white" }}>De acuerdo</Text>
-          </Pressable>
-        </ThemedView>
-        <MathKeyboard
-          onButtonPressed={(name) => handleKeyboardButtonPress(name)}
-        />
+            <ThemedText type="title">Felicidades!</ThemedText>
+            <ThemedText>{currentSection.text}</ThemedText>
+            <Pressable
+              style={{ padding: 12, backgroundColor: "black" }}
+              onPress={() => handleNextSection()}
+            >
+              <Text style={{ color: "white" }}>Entendido!</Text>
+            </Pressable>
+          </ThemedView>
+        )}
       </ThemedView>
     );
   } else {

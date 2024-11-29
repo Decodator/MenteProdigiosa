@@ -38,10 +38,9 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
           <Stack.Screen
-            name="lesson_screen"
+          name="screens/lessons_screens"
             options={{ headerTitle: "Lección" }}
           />
-          <Stack.Screen name="review_screen" />
         </Stack>
       </ThemeProvider>
     </DataProvider>
